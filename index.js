@@ -8,7 +8,7 @@ const config = require("./connection/db/config");
 const connectDB = require("./connection/db/database");
 const { testConnection } = require("./connection/db/database");
 
-//const eventRoutes = require("./routes/eventRoutes");
+const eventRoutes = require("./routes/eventRoutes");
 const dotenv = require("dotenv");
 dotenv.config();
 
@@ -20,10 +20,10 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Routes
-//app.use("/api", eventRoutes.routes);
+app.use("/api/v1/events", eventRoutes);
 
 // Health check endpoint
-app.get("/health", async (req, res) => {
+app.get("/api/v1/health", async (req, res) => {
   try {
     const dbHealthy = await connectDB();
     res.json({
@@ -50,7 +50,7 @@ app.get("/", (req, res) => {
     message: "Event Management API",
     version: "1.0.0",
     endpoints: {
-      health: "/health",
+      health: "/api/v1/health",
       api: "/api/v1",
       events: "/api/v1/events",
     },
@@ -75,8 +75,8 @@ const initializeApp = async () => {
     // Start server
     const server = app.listen(process.env.PORT, process.env.HOST, () => {
       console.log(`🎉 Server running at ${process.env.HOST_URL}`);
-      console.log(`📡 API endpoint: ${process.env.HOST_URL}/api`);
-      console.log(`🏥 Health check: ${process.env.HOST_URL}/health`);
+      console.log(`📡 API endpoint: ${process.env.HOST_URL}/api/v1/events`);
+      console.log(`🏥 Health check: ${process.env.HOST_URL}/api/v1/health`);
       console.log("✨ Ready to accept connections!");
     });
   } catch (error) {
