@@ -1,3 +1,5 @@
+// File: connection/db/config.js
+
 "use strict";
 
 const dotenv = require("dotenv");
@@ -33,6 +35,40 @@ assert(DB_PASSWORD, "DB_PASSWORD is required");
 const sqlEncrypt = DB_ENCRYPT === "true";
 const trustServerCertificate = DB_TRUST_SERVER_CERTIFICATE === "true";
 
+// Handle named instance configuration
+const serverConfig = {
+  server: DB_SERVER,
+  database: DB_NAME,
+  user: DB_USER,
+  password: DB_PASSWORD,
+
+  // Connection pool settings
+  pool: {
+    max: parseInt(DB_POOL_MAX || "10"),
+    min: parseInt(DB_POOL_MIN || "2"),
+    idleTimeoutMillis: 30000,
+  },
+
+  // Request timeout
+  requestTimeout: parseInt(DB_REQUEST_TIMEOUT || "15000"),
+  connectionTimeout: parseInt(DB_CONNECTION_TIMEOUT || "15000"),
+
+  // Security settings - adjusted for SQL Server Express
+  options: {
+    encrypt: sqlEncrypt,
+    trustServerCertificate: trustServerCertificate,
+    enableArithAbort: true,
+    instanceName: DB_SERVER.includes("\\")
+      ? DB_SERVER.split("\\")[1]
+      : undefined,
+  },
+};
+
+// Only add port if it's specified and not using named instance
+if (DB_PORT && !DB_SERVER.includes("\\")) {
+  serverConfig.port = parseInt(DB_PORT);
+}
+
 module.exports = {
   // Server configuration
   port: PORT,
@@ -40,29 +76,30 @@ module.exports = {
   url: HOST_URL,
 
   // SQL Server configuration
-  sql: {
-    server: DB_SERVER,
-    port: parseInt(DB_PORT || "1433"),
-    database: DB_NAME,
-    user: DB_USER,
-    password: DB_PASSWORD,
+  // sql: {
+  //   server: DB_SERVER,
+  //   port: parseInt(DB_PORT || "1433"),
+  //   database: DB_NAME,
+  //   user: DB_USER,
+  //   password: DB_PASSWORD,
 
-    // Connection pool settings
-    pool: {
-      max: parseInt(DB_POOL_MAX || "10"),
-      min: parseInt(DB_POOL_MIN || "2"),
-      idleTimeoutMillis: 30000,
-    },
+  //   // Connection pool settings
+  //   pool: {
+  //     max: parseInt(DB_POOL_MAX || "10"),
+  //     min: parseInt(DB_POOL_MIN || "2"),
+  //     idleTimeoutMillis: 30000,
+  //   },
 
-    // Request timeout
-    requestTimeout: parseInt(DB_REQUEST_TIMEOUT || "15000"),
-    connectionTimeout: parseInt(DB_CONNECTION_TIMEOUT || "15000"),
+  //   // Request timeout
+  //   requestTimeout: parseInt(DB_REQUEST_TIMEOUT || "15000"),
+  //   connectionTimeout: parseInt(DB_CONNECTION_TIMEOUT || "15000"),
 
-    // Security settings
-    options: {
-      encrypt: sqlEncrypt,
-      trustServerCertificate: trustServerCertificate,
-      enableArithAbort: true,
-    },
-  },
+  //   // Security settings
+  //   options: {
+  //     encrypt: sqlEncrypt,
+  //     trustServerCertificate: trustServerCertificate,
+  //     enableArithAbort: true,
+  //   },
+  // },
+  sql: serverConfig,
 };

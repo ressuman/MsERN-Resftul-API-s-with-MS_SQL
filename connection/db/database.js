@@ -1,6 +1,6 @@
-// config/database.js
+// File: connection/db/database.js
 const sql = require("mssql");
-const config = require("./index");
+const config = require("./config");
 
 // Connection pool
 let pool;
