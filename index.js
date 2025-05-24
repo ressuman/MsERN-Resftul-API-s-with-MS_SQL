@@ -4,7 +4,7 @@
 
 const express = require("express");
 const cors = require("cors");
-const config = require("./connection/db/config");
+//const config = require("./connection/db/config");
 const connectDB = require("./connection/db/database");
 const { testConnection } = require("./connection/db/database");
 
@@ -73,7 +73,7 @@ const initializeApp = async () => {
     }
 
     // Start server
-    const server = app.listen(process.env.PORT, process.env.HOST, () => {
+    app.listen(process.env.PORT, process.env.HOST, () => {
       console.log(`🎉 Server running at ${process.env.HOST_URL}`);
       console.log(`📡 API endpoint: ${process.env.HOST_URL}/api/v1/events`);
       console.log(`🏥 Health check: ${process.env.HOST_URL}/api/v1/health`);
