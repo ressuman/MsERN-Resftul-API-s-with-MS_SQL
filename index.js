@@ -5,12 +5,12 @@
 const express = require("express");
 const cors = require("cors");
 const config = require("./connection/db/config");
-const {
-  getPool,
-  testConnection,
-  closePool,
-} = require("./connection/db/database");
+const connectDB = require("./connection/db/database");
+const { testConnection } = require("./connection/db/database");
+
 //const eventRoutes = require("./routes/eventRoutes");
+const dotenv = require("dotenv");
+dotenv.config();
 
 const app = express();
 
@@ -25,14 +25,14 @@ app.use(express.urlencoded({ extended: true }));
 // Health check endpoint
 app.get("/health", async (req, res) => {
   try {
-    const dbHealthy = await testConnection();
+    const dbHealthy = await connectDB();
     res.json({
       status: "OK",
       timestamp: new Date().toISOString(),
       database: dbHealthy ? "Connected" : "Disconnected",
       server: {
-        host: config.host,
-        port: config.port,
+        host: process.env.HOST,
+        port: process.env.PORT,
         environment: process.env.NODE_ENV,
       },
     });
@@ -62,42 +62,23 @@ const initializeApp = async () => {
   try {
     console.log("🚀 Starting Event Management API...");
     console.log(`🌍 Environment: ${process.env.NODE_ENV}`);
-    console.log(`🖥️  Server: ${config.host}:${config.port}`);
+    console.log(`🖥️  Server: ${process.env.HOST}:${process.env.PORT}`);
 
     // Test database connection
     console.log("🔍 Testing database connection...");
     const dbConnected = await testConnection();
+    console.log("✅ Database connection successful");
     if (!dbConnected) {
       throw new Error("Database connection failed");
     }
 
     // Start server
-    const server = app.listen(config.port, config.host, () => {
-      console.log(`🎉 Server running at ${config.url}`);
-      console.log(`📡 API endpoint: ${config.url}/api`);
-      console.log(`🏥 Health check: ${config.url}/health`);
+    const server = app.listen(process.env.PORT, process.env.HOST, () => {
+      console.log(`🎉 Server running at ${process.env.HOST_URL}`);
+      console.log(`📡 API endpoint: ${process.env.HOST_URL}/api`);
+      console.log(`🏥 Health check: ${process.env.HOST_URL}/health`);
       console.log("✨ Ready to accept connections!");
     });
-
-    // Graceful shutdown
-    const gracefulShutdown = async (signal) => {
-      console.log(`\n📡 Received ${signal}. Starting graceful shutdown...`);
-
-      server.close(async () => {
-        console.log("🔒 HTTP server closed");
-
-        // Close database connections
-        await closePool();
-
-        console.log("👋 Graceful shutdown completed");
-        process.exit(0);
-      });
-    };
-
-    // Handle shutdown signals
-    process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
-    process.on("SIGINT", () => gracefulShutdown("SIGINT"));
-    process.on("SIGUSR2", () => gracefulShutdown("SIGUSR2")); // For nodemon
   } catch (error) {
     console.error("💥 Failed to start application:", error.message);
     console.error("Stack trace:", error.stack);
